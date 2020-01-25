@@ -15,8 +15,8 @@
 #define DIO 3
 #define CLK 2
 
-int minutes_away_1;
-int minutes_away_2;
+int minutes_away_1 = -1;
+int minutes_away_2 = -1;
 
 int led_array[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 boolean newData = false;
@@ -53,18 +53,25 @@ void setup() {
 
 void displayTime() {
   // Set the brightness:
+  boolean displaying = false;
   display.setBrightness(7);
   if ( flip_display_value == true) {
     //Display A, C direction time
     display.clear();
-    display.showNumberDecEx(minutes_away_1, 0b01000000, true, 2, 0);
+    if ( minutes_away_1 != -1){
+      display.showNumberDecEx(minutes_away_1, 0b01000000, true, 2, 0);
+      
+    }
     display.setSegments(train_A, 1, 3);
     flip_display_value = false;
   }
   else {
     //Display 4 train direction time
     display.clear();
-    display.showNumberDecEx(minutes_away_2, 0b01000000, true, 2, 0);
+    if ( minutes_away_2 != -1){
+      display.showNumberDecEx(minutes_away_2, 0b01000000, true, 2, 0);
+      
+    }
     display.setSegments(train_4, 1, 3);
     flip_display_value = true;
   }

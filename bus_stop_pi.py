@@ -21,6 +21,7 @@ class ArduinoBusStopViewer:
             bus_stop_code_2
         )
         self.ser = Serial(bluetooth_path, 9600)
+        
 
     def start(self):
 
@@ -34,28 +35,40 @@ class ArduinoBusStopViewer:
             buses_in_progress_2, next_bus_2 = self.mta_bus_api.get_bus_info(
                                                                         self.bus_stop_direction_2
                                                                     )
+            next_bus_1 = self._next_bus_formatter(next_bus_1)
+            next_bus_2 = self._next_bus_formatter(next_bus_2)
+
+            self.attempt_serial_write(
+                buses_in_progress_1, buses_in_progress_2,
+                next_bus_1, next_bus_2
+            )
+
+            time.sleep(28)
+
+    def attempt_serial_write(self, buses_in_progress_1, buses_in_progress_2, next_bus_1, next_bus_2):
+         
+        attempts = 0
+        while attempts < 3:
             try:
+                time.sleep(1)
                 self._serial_write(
-                    buses_in_progress_1, buses_in_progress_2, 
+                    buses_in_progress_1, buses_in_progress_2,
                     next_bus_1, next_bus_2
                 )
-            #if bluetooth is disconnected then will try to re-establish connection
+                break
             except SerialException:
-                print("Not connected!")
+                print("Disconnected! Attempting to reconnect:")
+                attempts += 1
+                print("\tAttempts to re-connect: {}".format(attempts))
                 self.ser.close()
-                while not self.ser.is_open:
-                    self.ser.open()
-                    time.sleep(1)
-                    # try:
-                    #     self._serial_write(
-                    #         buses_in_progress_1, buses_in_progress_2,
-                    #         next_bus_1, next_bus_2
-                    #     )
-                    # except:
+                time.sleep(2)
+                self.ser.open()
+                time.sleep(2)
 
-                    print("re-opened port: {0}".format(self.ser.is_open))
-            #api updates every 30 secs
-            time.sleep(30)
+        if attempts < 3:
+            print("Message Sent!")
+        else:
+            print("Unable to connect")
 
 
     def _serial_write(self, buses_in_progress_1, buses_in_progress_2, next_bus_1, next_bus_2):
@@ -86,8 +99,7 @@ class ArduinoBusStopViewer:
                     00000 bus 2 LEDs 
                 > 
         """
-        next_bus_1 = self._next_bus_formatter(next_bus_1)
-        next_bus_2 = self._next_bus_formatter(next_bus_2)
+        
         led_array = self._led_light_formatter(
             buses_in_progress_1, 
             buses_in_progress_2
@@ -95,9 +107,9 @@ class ArduinoBusStopViewer:
         #-- start marker
         send_serial_string = "<" 
         #appending time in mins of next bus at stop 1 and stop 2
-        send_serial_string += "{next_bus_1:02}{next_bus_2:02}".format(
-            next_bus_1=next_bus_1,
-            next_bus_2=next_bus_2
+        send_serial_string += "{0:02}{1:02}".format(
+            next_bus_1,
+            next_bus_2
         )
         #appending led array
         send_serial_string += ''.join(map(str, led_array))
@@ -236,6 +248,7 @@ class MTABusStopAPI:
         #next_bus_mins is the closest bus to the stop in minutes
         if next_bus_mins > mins_away or next_bus_mins == -1:
             next_bus_mins = mins_away
+
         #Checks if stops are less than threshold provided
         if stops_away < distance_in_stops:
             #FORMAT for near_buses
