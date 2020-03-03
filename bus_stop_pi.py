@@ -270,7 +270,7 @@ class MTABusStopAPI:
 
 
 if __name__ == "__main__":
-    RASPBERRY_PI_HC_06_PATH = '/dev/rfcomm1'
+    RASPBERRY_PI_HC_06_PATH = '/dev/rfcomm2'
     MTA_BUS_API_KEY = "4d30d5c7-070e-4e6d-8e3a-b8a513976940"
     #CLOSEST STOPS FROM HOME
     UTICA_TO_WILLIAMSBURG_BUS_STOP_CODE = "307093"
